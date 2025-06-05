@@ -1,0 +1,193 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# TDD (Test-Driven Development) 룰
+
+## 기본 원칙
+
+### Red-Green-Refactor 사이클 준수
+1. **Red**: 실패하는 테스트를 먼저 작성한다
+2. **Green**: 테스트를 통과하는 최소한의 코드를 작성한다  
+3. **Refactor**: 코드를 개선하고 중복을 제거한다
+
+### 테스트 우선 작성
+- 모든 새로운 기능은 테스트부터 시작한다
+- 테스트가 없는 코드는 작성하지 않는다
+- 한 번에 하나의 테스트만 작성한다
+
+## FastAPI 백엔드 TDD 룰
+
+### 테스트 구조
+```python
+# tests/test_posts.py 예시
+import pytest
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+class TestPostAPI:
+    def test_게시글_생성_성공(self):
+        # Given: 게시글 데이터 준비
+        post_data = {
+            "title": "테스트 제목",
+            "content": "테스트 내용",
+            "author": "테스트 작성자"
+        }
+        
+        # When: API 호출
+        response = client.post("/posts", json=post_data)
+        
+        # Then: 응답 검증
+        assert response.status_code == 201
+        assert response.json()["title"] == "테스트 제목"
+```
+
+### 백엔드 테스트 우선순위
+1. **API 엔드포인트 테스트** (integration test)
+2. **비즈니스 로직 테스트** (unit test)  
+3. **데이터베이스 연동 테스트** (integration test)
+4. **인증/인가 테스트** (unit/integration test)
+
+### 테스트 파일 명명 규칙
+- `tests/test_{feature_name}.py` 형식
+- 테스트 메서드는 `test_{기능}__{시나리오}` 형식 (한글 허용)
+- 클래스는 `Test{FeatureName}` 형식
+
+## React 프론트엔드 TDD 룰
+
+### 테스트 구조
+```typescript
+// src/components/__tests__/PostList.test.tsx 예시
+import { render, screen, waitFor } from '@testing-library/react'
+import { PostList } from '../PostList'
+
+describe('PostList 컴포넌트', () => {
+  test('게시글 목록이 올바르게 렌더링된다', async () => {
+    // Given: Mock 데이터 준비
+    const mockPosts = [
+      { id: 1, title: '첫 번째 게시글', author: '작성자1' }
+    ]
+    
+    // When: 컴포넌트 렌더링
+    render(<PostList posts={mockPosts} />)
+    
+    // Then: 화면 검증
+    await waitFor(() => {
+      expect(screen.getByText('첫 번째 게시글')).toBeInTheDocument()
+    })
+  })
+})
+```
+
+### 프론트엔드 테스트 우선순위
+1. **사용자 인터랙션 테스트** (user event test)
+2. **컴포넌트 렌더링 테스트** (render test)
+3. **API 통신 테스트** (mock API test)
+4. **라우팅 테스트** (navigation test)
+
+### 테스트 도구 설정
+- **Testing Library**: 사용자 중심 테스트
+- **Jest**: 테스트 러너 및 assertion
+- **MSW**: API 모킹
+- **User Events**: 사용자 상호작용 시뮬레이션
+
+## 통합 테스트 룰
+
+### E2E 테스트 시나리오
+```typescript
+// e2e/게시판.spec.ts 예시
+test('게시글 작성부터 조회까지 전체 플로우', async ({ page }) => {
+  // 1. 게시글 작성 페이지 이동
+  await page.goto('/posts/new')
+  
+  // 2. 게시글 작성
+  await page.fill('[data-testid="title-input"]', '테스트 게시글')
+  await page.fill('[data-testid="content-textarea"]', '테스트 내용')
+  await page.click('[data-testid="submit-button"]')
+  
+  // 3. 게시글 목록에서 확인
+  await expect(page.locator('text=테스트 게시글')).toBeVisible()
+})
+```
+
+## 테스트 작성 순서
+
+### 새 기능 개발 시 순서
+1. **E2E 테스트 작성** (사용자 시나리오)
+2. **API 테스트 작성** (백엔드)
+3. **컴포넌트 테스트 작성** (프론트엔드)
+4. **단위 테스트 작성** (개별 함수/클래스)
+
+### 각 단계별 구현
+1. 실패하는 테스트 작성
+2. 테스트를 통과하는 최소 코드 구현
+3. 리팩토링 및 코드 정리
+4. 다음 테스트로 진행
+
+## 테스트 품질 기준
+
+### 좋은 테스트의 조건
+- **Fast**: 빠르게 실행된다
+- **Independent**: 독립적으로 실행된다
+- **Repeatable**: 반복 가능하다
+- **Self-Validating**: 성공/실패가 명확하다
+- **Timely**: 적시에 작성된다
+
+### 테스트 커버리지 목표
+- **단위 테스트**: 80% 이상
+- **통합 테스트**: 주요 플로우 100%
+- **E2E 테스트**: 핵심 사용자 시나리오 100%
+
+## 프로젝트별 테스트 설정
+
+### 백엔드 테스트 명령어
+```bash
+# 단위 테스트 실행
+uv run pytest tests/unit/
+
+# 통합 테스트 실행  
+uv run pytest tests/integration/
+
+# 전체 테스트 실행
+uv run pytest
+
+# 커버리지 리포트
+uv run pytest --cov=src
+```
+
+### 프론트엔드 테스트 명령어
+```bash
+# 단위 테스트 실행
+npm run test
+
+# 테스트 워치 모드
+npm run test:watch
+
+# E2E 테스트 실행
+npm run test:e2e
+
+# 커버리지 리포트
+npm run test:coverage
+```
+
+## 백그라운드 에이전트 지침
+
+백그라운드 에이전트는 다음 순서로 개발을 진행해야 합니다:
+
+1. **기능 요구사항 분석**
+2. **테스트 시나리오 작성**
+3. **실패하는 테스트 작성**
+4. **최소 구현으로 테스트 통과**
+5. **리팩토링 및 개선**
+6. **다음 기능으로 진행**
+
+### 코드 품질 체크포인트
+- 모든 새 코드는 테스트와 함께 작성
+- 기존 테스트가 깨지지 않음을 확인
+- 코드 리뷰 전 테스트 통과 필수
+- 리팩토링 시 테스트 커버리지 유지
+
+이 룰을 따라 견고하고 유지보수 가능한 게시판 시스템을 구축하세요.
