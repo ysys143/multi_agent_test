@@ -1,0 +1,16 @@
+{
+  "user": "ubuntu",
+  "install": "./.cursor/install.sh",
+  "terminals": [
+    {
+      "name": "fastapi-server",
+      "command": "cd backend && uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+      "description": "FastAPI 백엔드 개발 서버를 실행합니다. 포트 8000에서 실행되며 코드 변경 시 자동으로 재시작됩니다."
+    },
+    {
+      "name": "react-dev-server",
+      "command": "cd frontend && npm run dev",
+      "description": "React 프론트엔드 개발 서버를 실행합니다. TailwindCSS도 자동으로 처리됩니다."
+    }
+  ]
+} 
